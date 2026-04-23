@@ -73,7 +73,7 @@ function parseMD(md, prevLinks) {
       if (t.match(/\./)) {
         token[5] = token[5].replace(/^\d+/gm, '');
       }
-      inner = parse(outdent(token[5].replace(/^\s*[>*+.-]/gm, '')));
+      inner = parseMD(outdent(token[5].replace(/^\s*[>*+.-]/gm, '')));
       if (t=='>') t = 'blockquote';
       else {
         t = t.match(/\./) ? 'ol' : 'ul';
@@ -96,7 +96,7 @@ function parseMD(md, prevLinks) {
     // Headings:
     else if (token[12] || token[14]) {
       t = 'h' + (token[14] ? token[14].length : (token[13]>'=' ? 1 : 2));
-      chunk = '<'+t+'>' + parse(token[12] || token[15], links) + '</'+t+'>';
+      chunk = '<'+t+'>' + parseMD(token[12] || token[15], links) + '</'+t+'>';
     }
     // `code`:
     else if (token[16]) {
@@ -126,6 +126,10 @@ const useMarkdownParserEl = document.getElementById('useMarkdownParser');
 if (useMarkdownParserEl) {
   var useMarkdownParser = useMarkdownParserEl.value
 }
+
+var SEARCH_DEBOUNCE_MS = parseInt((document.getElementById('search_debounce_ms') || {}).value) || 250;
+var SEARCH_MAX_RESULTS = parseInt((document.getElementById('search_max_results') || {}).value) || 200;
+var SEARCH_SORT_MIN_CHARS = parseInt((document.getElementById('search_sort_min_chars') || {}).value) || 3;
 
 var indexOnDescriptionCheckbox = document.getElementById('indexOnDescriptionCheckbox');
 var indexOnTitleCheckbox = document.getElementById('indexOnTitleCheckbox');
@@ -185,13 +189,28 @@ var updateLastUpdate = function(lastUpdate) {
   lastUpdateElement.textContent = 'Last update: '+ lastUpdate;
 };
 
-var updateOptionsTable = function(options) {
+var resultCapMessage = document.getElementById('resultCapMessage');
+var resultCapText = document.getElementById('resultCapText');
+var showAllResultsLink = document.getElementById('showAllResults');
+
+var updateOptionsTable = function(options, showAll) {
   indexedOptionsTBody.innerHTML = '';
   currentSet = options;
 
   var tokens = search.tokenizer.tokenize(searchInput.value);
 
-  for (var i = 0, length = options.length; i < length; i++) {
+  var renderLimit = (showAll || SEARCH_MAX_RESULTS <= 0) ? options.length : Math.min(options.length, SEARCH_MAX_RESULTS);
+
+  if (options.length > renderLimit) {
+    resultCapText.textContent = 'Showing ' + renderLimit + ' of ' + options.length + ' results';
+    resultCapMessage.className = resultCapMessage.className.replace(/\s*hidden/, '');
+  } else {
+    if (resultCapMessage.className.indexOf('hidden') === -1) {
+      resultCapMessage.className += ' hidden';
+    }
+  }
+
+  for (var i = 0, length = renderLimit; i < length; i++) {
     var option = options[i];
 
     var titleColumn = document.createElement('td');
@@ -257,7 +276,7 @@ var updateOptionsTable = function(options) {
 function parseDescription(text){
 
   text = text.replace(/<https(\s*([^>]*))/gi ,'<a href="https$1">&lt;https$1</a>');
-  text = text.replace(/\[\]\(#opt-(\s*([^)]*))/gi ,'<strong>$1</strong>').replace(/\)/gi,'');
+  text = text.replace(/\[\]\(#opt-([^)]*)\)/gi ,'<strong>$1</strong>');
   //[](#opt-wayland.windowManager.hyprland.plugins)
   text = text.replace(/\{var\}(\s*([^\n]*))/gi ,'<strong>$1</strong>').replace(/`/gi,'')
   text = text.replace(/:::\ \{\.note\}(\s*([^:::]*))/gi ,'<div class="alert alert-info" role="alert">$1</div>').replace(/:::/,'').replace(/\n/g, '<br />')
@@ -293,7 +312,7 @@ var expandOption = function(el){
   var elDesc = "<h5 style='margin:1em 0 0 0'>Description</h5><div>" + parseDescription(currentSet[el].description) + "</div>";
   var elType = "<h5 style='margin:1em 0 0 0'>Type</h5><div>" + currentSet[el].type + "</div>";
   //var elNote = ( currentSet[el].note == "" ? "": "<h5 style='margin:1em 0 0 0'>Note</h5><div>" + currentSet[el].note + "</div>");
-  var elDefault = "<h5 style='margin:1em 0 0 0'>Default</h5><div><pre style='margin-top:0.5em'>" + currentSet[el].default + "</pre></div>";
+  var elDefault = ( currentSet[el].default == "" ? "" : "<h5 style='margin:1em 0 0 0'>Default</h5><div><pre style='margin-top:0.5em'>" + currentSet[el].default + "</pre></div>");
   var elExample = ( currentSet[el].example == "" ? "" : "<h5 style='margin:1em 0 0 0'>Example</h5><div><pre style='margin-top:0.5em'>" + currentSet[el].example + "</pre></div>");
 
   //var declared_by_str = currentSet[el].declarations[0].name;
@@ -308,6 +327,11 @@ var expandOption = function(el){
 
   $('#myModal').modal('show')
 }
+
+showAllResultsLink.onclick = function(e) {
+  e.preventDefault();
+  updateOptionsTable(currentSet, true);
+};
 
 var updateOptionCountAndTable = function() {
   updateOptionCount(results.length);
@@ -334,8 +358,7 @@ var setSearchQueryToUrlParam = function(query,release) {
 var searchOptions = function(query) {
   results = search.search(query);
 
-  // Performance optimization: skip ordering if query is a single character
-  if (query.length > 1) {
+  if (query.length >= SEARCH_SORT_MIN_CHARS) {
     // Split terms by non-alphanumeric chars
     const terms = query.split(/[^A-Za-z0-9]/);
 
@@ -379,10 +402,7 @@ var searchOptions = function(query) {
   updateOptionCountAndTable();
 };
 
-const SEARCH_INPUT_DEBOUNCE_MS = 100;
-
 let debounceTimer;
-
 
 function newSearch(){
   clearTimeout(debounceTimer);
@@ -394,7 +414,7 @@ function newSearch(){
     setSearchQueryToUrlParam(query, release);
     searchOptions(query);
 
-  }, SEARCH_INPUT_DEBOUNCE_MS);
+  }, SEARCH_DEBOUNCE_MS);
 }
 
 searchInput.oninput = function() {
