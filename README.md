@@ -1,7 +1,5 @@
 # NixOS Options Search
 
-WIP
-
 ## Contribute
 
 - Please use the issue tracker or fork this site for PR's

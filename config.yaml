@@ -5,36 +5,42 @@ theme: extranix-options-search
 
 params:
 
-  release_switch_title: NixOS Release
+  release_current_stable: release-25.11
   releases:
     - name: unstable
       value: release-unstable
-    - name: 23.11
-      value: release-23.11
-    - name: 23.05
-      value: release-23.05
-    - name: 22.11
-      value: release-22.11
+    - name: 25.11 (stable)
+      value: release-25.11
+    - name: 25.05
+      value: release-25.05
+    - name: 24.11
+      value: release-24.11
+    - name: 24.05
+      value: release-24.05
 
-  xcustom_head_scripts: |
+  release_switch_title: NixOS Release
+
+  # TODO update
+  custom_head_scripts: |
     <script async src="https://umami.pimsnel.com/script.js" data-website-id="8e970d59-b517-4ba6-9b92-207e7dbdb4b1"></script>
     <script async src="https://media.ethicalads.io/media/client/ethicalads.min.js"></script>
 
-  xcustom_header_tags: <div id="eadiv" data-ea-publisher="extranixcom" data-ea-type="text"></div>
+  custom_header_tags: <div id="eadiv" data-ea-publisher="extranixcom" data-ea-type="text"></div>
 
   footer_credits_line: |
     Powered by the <a href="https://nixos.org/">NixOS</a> |
-    <a href="https://github.com/mipmip/home-manager-option-search#credits">Credits</a> |
+    <a href="https://github.com/ekstranix/nixos-option-search#credits">Credits</a> |
     <a href="https://nixos.org/manual/nixos/stable/">NixOS Documentation</a>
 
   footer_copyright_line: |
-    Made with ❤️ by <a href="https://github.com/mipmip">Pim Snel</a> - © 2024
+    Made with ❤️ by <a href="https://github.com/mipmip">Pim Snel</a> - © 2022-2026
 
-  xlogo: images/home-manager-option-search2.png
+  # TODO
+  logo: images/home-manager-option-search2.png
 
-  xgithub:
+  github:
     repo: nixos-option-search
-    user: mipmip
+    user: ekstranix
     show_count: true
     show_text: true
 
@@ -45,7 +51,7 @@ params:
       icon_class: fa fa-book
 
     - name: Source
-      url: https://github.com/mipmip/nixos-option-search
+      url: https://github.com/ekstranix/nixos-option-search
       icon_class: fa fa-github
 
 markup:

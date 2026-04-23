@@ -3,6 +3,6 @@
 .bundle
 result
 data/*.json
-static/options-release-23.11.json
-static/options-release-unstable.json
+static/data/*.json
 .hugo_build.lock
+.claude
