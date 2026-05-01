@@ -6,3 +6,9 @@ data/*.json
 static/data/*.json
 .hugo_build.lock
 .claude
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
